@@ -21,7 +21,8 @@ const YEARS = [
   "2018-2019",
 ];
 
-const API_BASE = "http://127.0.0.1:8000/get_data";
+const API_BASE = "https://mgnrega-backend-icrp.onrender.com/get_data";
+
 
 // Helper - safe number parser (handles "12,345", null, strings, etc.)
 const toNumber = (v) => {
