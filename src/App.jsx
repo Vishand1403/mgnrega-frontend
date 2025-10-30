@@ -501,9 +501,37 @@ useEffect(() => {
       )}
 
       {/* 🟦 Footer */}
-      <footer style={{ textAlign: "center", padding: 22, background: "#073b6b", color: "white", marginTop: 40 }}>
-        <div>Developed for Citizens — Our Work, Our Right</div>
-      </footer>
+      <footer
+  style={{
+    textAlign: "center",
+    padding: 22,
+    background: "#073b6b",
+    color: "white",
+    marginTop: 40,
+    fontSize: 14,
+    lineHeight: "1.6",
+  }}
+>
+  <div>
+    Developed by <strong>Vishand S</strong> — <em>Our Voice, Our Rights</em>
+  </div>
+  <div style={{ fontSize: 13, color: "#d3d3d3" }}>
+    Built for Citizens under the <strong>Build for Bharat Fellowship</strong>
+  </div>
+  <div style={{ fontSize: 12, marginTop: 4 }}>
+    Data Source:{" "}
+    <a
+      href="https://data.gov.in/"
+      target="_blank"
+      rel="noopener noreferrer"
+      style={{ color: "#ffd700", textDecoration: "none" }}
+    >
+      data.gov.in
+    </a>{" "}
+    | © 2025
+  </div>
+</footer>
+
     </div>
   );
 }
