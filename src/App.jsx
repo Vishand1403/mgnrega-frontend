@@ -3,13 +3,6 @@ import "./App.css";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, Cell } from "recharts";
 
 
-/**
- * App.jsx - MGNREGA Tamil Nadu Dashboard
- * - Fetches from backend: http://127.0.0.1:8000/get_data
- * - Supports All Years (2018-2019 → 2024-2025) aggregation or single year selection
- * - Shows summary cards, insights, chart, table, and district modal
- */
-
 const YEARS = [
   "All",
   "2024-2025",
@@ -24,7 +17,6 @@ const YEARS = [
 const API_BASE = "https://mgnrega-backend-icrp.onrender.com/get_data";
 
 
-// Helper - safe number parser (handles "12,345", null, strings, etc.)
 const toNumber = (v) => {
   if (v === null || v === undefined) return 0;
   if (typeof v === "number") return v;
@@ -34,9 +26,9 @@ const toNumber = (v) => {
 };
 
 export default function App() {
-  // states
-  const [data, setData] = useState([]); // grouped district-level data used in chart/table
-  const [rawRecords, setRawRecords] = useState([]); // optional raw rows if needed
+  
+  const [data, setData] = useState([]); 
+  const [rawRecords, setRawRecords] = useState([]); 
   const [loading, setLoading] = useState(false);
   const [isTamil, setIsTamil] = useState(false);
 
@@ -55,18 +47,18 @@ export default function App() {
 
   const [selectedDistrict, setSelectedDistrict] = useState(null);
 
-  // debounce for district input
+  
   const districtTimer = useRef(null);
 
-  // Main fetch function: supports year = 'All' or single FY
+  
   const fetchData = async (opts = {}) => {
-    // opts can include yearOverride and districtOverride
+    
     const yearOverride = opts.yearOverride ?? year;
     const districtOverride = opts.districtOverride ?? districtFilter;
     setLoading(true);
 
     try {
-      // Helper to call backend for a specific fin_year
+      
       const fetchForYear = async (fin_year) => {
         const params = new URLSearchParams();
         if (stateName) params.append("state_name", stateName.toUpperCase());
@@ -79,14 +71,14 @@ export default function App() {
           throw new Error(`Fetch failed ${res.status} ${res.statusText} ${txt}`);
         }
         const json = await res.json();
-        // backend returns { data: [...] } OR [...]
+        
         return json?.data || json || [];
       };
 
       let allRows = [];
 
       if (yearOverride === "All") {
-        // fetch each year sequentially (backend should return filtered rows)
+        
         const yearsToFetch = YEARS.filter((y) => y !== "All");
         for (const y of yearsToFetch) {
           try {
@@ -97,15 +89,15 @@ export default function App() {
           }
         }
       } else {
-        // single year
+        
         const rows = await fetchForYear(yearOverride);
         if (rows && rows.length) allRows.push(...rows);
       }
      
-            // save rawRecords (optional)
+            
       setRawRecords(allRows);
 
-      // ✅ Normalize records and group by district_name
+      
       const normalized = allRows.map((r) => {
         const district_raw = r.district_name || r.District || "";
         const district_clean = String(district_raw).trim();
@@ -125,12 +117,12 @@ export default function App() {
         };
       });
 
-      // ✅ Filter valid districts
+      
       const filtered = normalized.filter(
         (x) => x.district_name && x.district_name.length > 0
       );
 
-      // ✅ Group by district
+      
       const grouped = filtered.reduce((acc, cur) => {
         const key = cur.district_name;
         if (!acc[key]) {
@@ -149,7 +141,7 @@ export default function App() {
 
       let finalArray = Object.values(grouped);
 
-      // ✅ Apply visible district filter
+      
       if (districtFilter && districtFilter.trim().length > 0) {
         const df = districtFilter.trim().toUpperCase();
         finalArray = finalArray.filter((d) =>
@@ -157,13 +149,13 @@ export default function App() {
         );
       }
 
-      // ✅ Sort by Total_Exp (descending)
+     
       finalArray.sort((a, b) => b.Total_Exp - a.Total_Exp);
 
-      // ✅ Set final data
+      
       setData(finalArray);
 
-      // ✅ Compute insights
+      
       const totalHouseholds = finalArray.reduce(
         (s, x) => s + toNumber(x.Total_Households_Worked),
         0
@@ -196,7 +188,7 @@ export default function App() {
       setLoading(false);
     }
   };
-  // 🌍 Auto detect user's district/state on page load
+  
 useEffect(() => {
   async function detectLocation() {
     try {
@@ -209,7 +201,7 @@ useEffect(() => {
         const { latitude, longitude } = pos.coords;
         console.log("📍 Location detected:", latitude, longitude);
 
-        // 🆕 Added language=en to always get English output
+       
         const res = await fetch(
           `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&accept-language=en`
         );
@@ -222,7 +214,7 @@ useEffect(() => {
           data.address?.region ||
           "";
 
-        // 🧹 Normalize district name
+        
         districtNameDetected = districtNameDetected
           .replace(/district/gi, "")
           .replace(/north|south|east|west|division/gi, "")
@@ -234,7 +226,7 @@ useEffect(() => {
         if (stateNameDetected) setStateName(stateNameDetected);
         if (districtNameDetected) {
           setDistrictFilter(districtNameDetected);
-          // 🔄 Auto-refresh data once detected
+          
           fetchData({
             yearOverride: year,
             districtOverride: districtNameDetected,
@@ -252,23 +244,23 @@ useEffect(() => {
 
 
 
-    // Auto-fetch data on mount or when filters change
+    
   useEffect(() => {
     fetchData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
   }, [year, stateName]);
 
-  // Small helpers for UI
+  
   const totalDistricts = data.length;
   const topChartData = data.slice(0, 10).map((d) => ({
     district_name: d.district_display,
     Total_Persondays_Generated: toNumber(d.Total_Persondays_Generated),
   }));
 
-  // ✅ UI Render
+  
   return (
     <div style={{ fontFamily: "Inter, Arial, sans-serif", background: "#f7f9fb", minHeight: "100vh" }}>
-      {/* 🔹 Header */}
+      {/* Header */}
 <div
   style={{
     background: "#073b6b",
@@ -316,7 +308,7 @@ useEffect(() => {
 </div>
 
 
-      {/* 🔸 Filters */}
+      {/* Filters */}
       <div style={{ padding: "18px 26px", display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <strong>Year:</strong>
@@ -354,7 +346,7 @@ useEffect(() => {
         </div>
       </div>
 
-      {/* 🔹 Summary Cards */}
+      {/*  Summary Cards */}
       <div style={{ padding: "8px 26px 24px 26px", display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
         <div style={{ background: "#e8f4ff", padding: 18, borderRadius: 12, minWidth: 220, textAlign: "center" }}>
           <div style={{ color: "#003366", fontWeight: 600 }}>{isTamil ? "மொத்த குடும்பங்கள்" : "Total Households Worked"}</div>
@@ -374,7 +366,7 @@ useEffect(() => {
         </div>
       </div>
 
-      {/* 📊 Bar Chart */}
+      {/*  Bar Chart */}
 <div style={{ width: "95%", margin: "12px auto 28px auto" }}>
   {loading ? (
     <div style={{ textAlign: "center", padding: 30 }}>Loading...</div>
@@ -410,7 +402,7 @@ useEffect(() => {
   )}
 </div>
 
-{/* 🧾 Table */}
+{/*  Table */}
 <div style={{ width: "95%", margin: "10px auto 40px auto", background: "white", borderRadius: 12, padding: 16 }}>
   <table style={{ width: "100%", borderCollapse: "collapse" }}>
     <thead>
@@ -451,7 +443,7 @@ useEffect(() => {
 </div>
 
 
-      {/* 🪟 District Modal */}
+      {/*  District Modal */}
       {selectedDistrict && (
         <div
           onClick={() => setSelectedDistrict(null)}
@@ -500,7 +492,7 @@ useEffect(() => {
         </div>
       )}
 
-      {/* 🟦 Footer */}
+      {/*  Footer */}
       <footer
   style={{
     textAlign: "center",
